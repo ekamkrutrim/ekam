@@ -20,4 +20,4 @@ echo "agent: $AG"
 
 # 3) Broker a token the agent presents to your gateway (any audience it is allowed).
 curl -s "$BASE/oauth/token" -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
-  -d "{\"agent_id\":\"$AG\",\"audience\":\"https://your-gateway.example\",\"scope\":\"models:invoke\"}" | jq .
+  -d "{\"grant_type\":\"urn:ietf:params:oauth:grant-type:token-exchange\",\"agent_id\":\"$AG\",\"resource\":\"https://your-gateway.example\",\"scope\":\"models:invoke\"}" | jq .

@@ -55,8 +55,9 @@ async function provisionAgent(name) {
 // and expires; the gateway verifies it OFFLINE against Ekam's JWKS.
 async function mintAgentToken(agentId) {
   const t = await ekam("POST", "/oauth/token", {
+    grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
     agent_id: agentId,
-    audience: AUDIENCE,
+    resource: AUDIENCE,
     scope: "models:chat",
   });
   return t.access_token;             // present as `Authorization: Bearer <token>` to the gateway
