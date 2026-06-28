@@ -5,6 +5,7 @@ Runnable samples for [Krutrim Ekam](https://ekam.olakrutrim.com). Browse them re
 
 | File | What it shows |
 |------|----------------|
+| `agent-platform-quickstart.mjs` | **Full integration in one file** — one owner key → provision agent → mint token → call the gateway. The use case to hand an agent-platform team. |
 | `verify-gateway.ts` | Verify an Ekam token offline in a gateway (the `@krutrim/ekam-verify` SDK). |
 | `provision-and-broker.sh` | Owner key → blueprint → agent → brokered token (curl). |
 | `govern-mcp.md` | Make Ekam your MCP server's authorization server (RFC 9728). |
