@@ -1,0 +1,14 @@
+<!doctype html>
+<!-- Add Ola Google SSO to your app. Employees on Ola domains sign in; others are
+     routed to Request access automatically. On return, /auth/callback hands back
+     #access_token=<jwt>&email=<email>. -->
+<a href="https://ekam.olakrutrim.com/auth/login">Sign in with Google</a>
+<script>
+  // Read the session handed back in the URL fragment.
+  const t = (location.hash.match(/access_token=([^&]+)/) || [])[1];
+  if (t) {
+    const claims = JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    console.log('signed in:', claims.sub, claims.type, claims.tenant, claims.entity);
+    // store t; send it as `Authorization: Bearer <t>` to your API.
+  }
+</script>
