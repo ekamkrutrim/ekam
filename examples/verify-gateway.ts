@@ -10,7 +10,7 @@ import { createEkamVerifier } from "@krutrim/ekam-verify";
 const verify = createEkamVerifier({
   issuer: "https://ekam.olakrutrim.com",
   jwksUri: "https://ekam.olakrutrim.com/.well-known/jwks.json",
-  audience: "https://api.bharatrouter.com",
+  audience: "https://your-gateway.example",
   introspectUrl: "https://ekam.olakrutrim.com/oauth/introspect", // optional live revocation
 });
 

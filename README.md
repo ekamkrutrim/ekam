@@ -23,12 +23,15 @@ agent era. It gives every principal — a **human** who signs in, or an **agent*
 unattended — a single, verifiable identity, and it brokers **short-lived, audience-bound,
 delegated tokens** that downstream services (gateways, MCP servers, APIs) verify **offline**.
 
-It is the identity layer underneath [BharatRouter](https://bharatrouter.com): Ekam issues the
-token, BharatRouter verifies it, maps the agent to a budget, meters usage, and **bills the owner**.
+Ekam is **gateway-neutral**: it issues the token, and any AI gateway, MCP server, or API verifies it
+**offline**. Ekam also **meters usage and bills the owner itself** — its own metering, billing, and
+usage, so it isn't tied to any one gateway.
 
 ## Key features
 
 - **Human + agent parity** — every capability ships as a human UI *and* a JSON/MCP API.
+- **Independent metering & billing** — Ekam tracks token/agent usage and bills the owner directly,
+  works with any gateway.
 - **Offline verification** — ES256 JWTs + JWKS; gateways verify without calling home, with an
   optional live **kill-switch** via introspection (RFC 7662).
 - **Delegation that travels** — RFC 8693 token-exchange + **ID-JAG / Cross-App Access**: carry a
@@ -68,7 +71,7 @@ import { createEkamVerifier } from "@krutrim/ekam-verify";
 const verify = createEkamVerifier({
   issuer: "https://ekam.olakrutrim.com",
   jwksUri: "https://ekam.olakrutrim.com/.well-known/jwks.json",
-  audience: "https://api.bharatrouter.com",
+  audience: "https://your-gateway.example",
 });
 
 const principal = await verify(token); // { agentId, ownerId, scopes, tenant, entity, ... }

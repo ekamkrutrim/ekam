@@ -9,7 +9,7 @@ BASE="${EKAM_BASE:-https://ekam.olakrutrim.com}"
 
 # 1) A blueprint = the policy template an agent is minted from.
 BP=$(curl -s "$BASE/v1/blueprints" -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
-  -d '{"name":"support","scopes":["models:invoke"],"allowedAudiences":["https://api.bharatrouter.com"],"tokenTtlSeconds":900}' \
+  -d '{"name":"support","scopes":["models:invoke"],"allowedAudiences":["https://your-gateway.example"],"tokenTtlSeconds":900}' \
   | jq -r .id)
 echo "blueprint: $BP"
 
@@ -18,6 +18,6 @@ AG=$(curl -s "$BASE/v1/agents" -H "authorization: Bearer $OWNER_KEY" -H 'content
   -d "{\"blueprintId\":\"$BP\",\"name\":\"support-bot\"}" | jq -r .id)
 echo "agent: $AG"
 
-# 3) Broker a token the agent presents to BharatRouter (or any audience it's allowed).
+# 3) Broker a token the agent presents to your gateway (any audience it is allowed).
 curl -s "$BASE/oauth/token" -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
-  -d "{\"agent_id\":\"$AG\",\"audience\":\"https://api.bharatrouter.com\",\"scope\":\"models:invoke\"}" | jq .
+  -d "{\"agent_id\":\"$AG\",\"audience\":\"https://your-gateway.example\",\"scope\":\"models:invoke\"}" | jq .

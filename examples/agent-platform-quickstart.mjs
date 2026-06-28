@@ -2,7 +2,7 @@
 // Krutrim Ekam — agent-platform integration quickstart
 //
 // USE CASE: An agent platform needs every agent it runs to carry a verifiable
-// identity so a gateway (e.g. BharatRouter) can gate, meter, and bill the owner.
+// identity so a gateway (e.g. an AI model gateway) can gate, meter, and bill the owner.
 //
 // ALL THE PLATFORM NEEDS FROM EKAM IS ONE SECRET: an **owner API key**
 // (ekam_sk_...). The Ekam operator creates an Owner for the platform (one click in
@@ -18,7 +18,7 @@
 
 const EKAM = process.env.EKAM_BASE || "https://ekam.olakrutrim.com";
 const OWNER_KEY = process.env.OWNER_KEY;                 // the ONE secret the platform holds
-const AUDIENCE = process.env.AUDIENCE || "https://api.bharatrouter.com";
+const AUDIENCE = process.env.AUDIENCE || "https://your-gateway.example";
 
 if (!OWNER_KEY) { console.error("set OWNER_KEY=ekam_sk_... (your Ekam owner key)"); process.exit(1); }
 
