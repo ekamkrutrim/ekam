@@ -41,15 +41,16 @@ verifies it offline — not tied to any one gateway.
 Ekam is **open beta — free, no invite**:
 
 - **Humans** sign in with any Google account (or your org's OIDC / SAML / GitHub IdP).
-- **Agents** can **register themselves** in a single API call (no key required) and broker scoped
-  tokens immediately.
+- **Human-rooted agents** — a signed-in human creates a workspace and mints agents; every agent is
+  **owned by a human**. There is **no anonymous agent signup** — that root of authority is the point.
+- Agents can fan out scoped **sub-agents** under the same human's authority (delegation / `act` chain).
 - Usage is metered; **billing is off** during beta.
 - Requests are **throttled (slowed), never blocked** — the service stays up for everyone.
 
 ## Key features
 
-- **Agent self-signup** — an agent registers itself and walks away with a working, scoped credential.
-- **First-class agent identity** — owned, blueprinted, revocable. Not an API key.
+- **Human-rooted agent identity** — every agent is owned, blueprinted, revocable, and traces to a
+  human. Not an anonymous API key.
 - **Offline verification** — ES256 JWTs + JWKS; gateways verify without calling home, with an
   optional live **kill-switch** via introspection (RFC 7662) + **CAEP push** (SSF).
 - **Delegation that travels** — RFC 8693 token-exchange + **ID-JAG / Cross-App Access**: carry a
@@ -66,26 +67,32 @@ Ekam is **open beta — free, no invite**:
 
 | Principal | How it authenticates |
 |-----------|----------------------|
-| **Human** | Sign in with any Google account at [ekam.olakrutrim.com](https://ekam.olakrutrim.com) (or your org's OIDC / SAML / GitHub IdP). |
-| **Agent** | **Self-signup:** `POST /v1/agents/self-signup` → `owner_key` + `agent_id`, then `POST /oauth/token` for a scoped, audience-bound token. Or discover the AS via MCP (RFC 9728). |
+| **Human** | Sign in with any Google account at [ekam.olakrutrim.com](https://ekam.olakrutrim.com) (or your org's OIDC / SAML / GitHub IdP) → `type:human` token. The root of authority. |
+| **Agent** | A signed-in human creates a workspace key, then mints agents (`POST /v1/agents`) and brokers tokens (`POST /oauth/token`). Agents fan out sub-agents via delegation (RFC 8693). Discover the AS via MCP (RFC 9728). |
 
-## Quickstart — an agent that signs itself up
+## Quickstart — create a human-rooted agent
+
+Sign in at [ekam.olakrutrim.com/account](https://ekam.olakrutrim.com/account) (any Google account in
+open beta), create a workspace, and mint a workspace key (`ekam_sk_…`) — that key represents **you**,
+the owner. Then:
 
 ```bash
-BASE=https://ekam.olakrutrim.com
+BASE=https://ekam.olakrutrim.com   # OWNER_KEY = your workspace key from /account
 
-# 1. Register an agent (no key needed) — returns an owner_key + agent_id
-curl -s $BASE/v1/agents/self-signup -H 'content-type: application/json' -d '{
-    "name": "my-agent",
-    "allowedAudiences": ["https://your-gateway.example"],
-    "scopes": ["models:invoke", "models:read"]
-  }'
+# 1. Define a blueprint, then mint an agent (owned by you)
+curl -s $BASE/v1/blueprints -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
+  -d '{"name":"chat-bot","scopes":["models:invoke"],"allowedAudiences":["https://your-gateway.example"],"tokenTtlSeconds":900}'
+curl -s $BASE/v1/agents -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
+  -d '{"blueprintId":"bp_…","name":"support-bot"}'
 
-# 2. Broker a short-lived, scoped token (owner_key is the OAuth client)
-curl -s $BASE/oauth/token -H "authorization: Bearer $OWNER_KEY" \
-  -H 'content-type: application/json' \
+# 2. Broker a short-lived, scoped token for the agent
+curl -s $BASE/oauth/token -H "authorization: Bearer $OWNER_KEY" -H 'content-type: application/json' \
   -d '{"grant_type":"urn:ietf:params:oauth:grant-type:token-exchange","agent_id":"agt_…","resource":"https://your-gateway.example","scope":"models:invoke"}'
 ```
+
+> **Why human-rooted?** An agent that bootstraps its own identity from nothing is exactly the
+> anonymous, unaccountable credential Ekam exists to replace. Every agent traces to a human — that's
+> what makes it attributable, revocable, and DPDP-accountable.
 
 **Building an agent or tool?** Point it at [`/llms.txt`](https://ekam.olakrutrim.com/llms.txt) and
 [`/llms-full.txt`](https://ekam.olakrutrim.com/llms-full.txt) — a machine-readable map and a full
@@ -98,7 +105,7 @@ This repo holds runnable samples — see [`examples/`](examples/). The same reci
 
 | Recipe | File |
 |--------|------|
-| Agent self-signup → broker a token | [`examples/self-signup.sh`](examples/self-signup.sh) |
+| Create a human-rooted agent → broker a token | [`examples/create-agent.sh`](examples/create-agent.sh) |
 | Verify an Ekam token in your gateway (SDK) | [`examples/verify-gateway.ts`](examples/verify-gateway.ts) |
 | Provision an agent &amp; broker a token (owner key) | [`examples/provision-and-broker.sh`](examples/provision-and-broker.sh) |
 | Govern an MCP server with Ekam (RFC 9728) | [`examples/govern-mcp.md`](examples/govern-mcp.md) |
