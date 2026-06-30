@@ -3,13 +3,15 @@
 </p>
 
 <h1 align="center">Krutrim <span>Ekam</span></h1>
-<p align="center"><b>One identity for every principal — human or agent.</b><br>
-The agent-identity &amp; delegation control plane for the Ola / Krutrim group.</p>
+<p align="center"><b>India's agent-identity &amp; access control plane.</b><br>
+Every AI agent gets a real, owned identity — not a shared API key.</p>
 
 <p align="center">
-  <a href="https://ekam.olakrutrim.com">Live</a> ·
+  <a href="https://ekam.olakrutrim.com"><b>Open beta — start free</b></a> ·
+  <a href="https://ekam.olakrutrim.com/blog">Blog</a> ·
   <a href="https://ekam.olakrutrim.com/docs">Docs &amp; API</a> ·
   <a href="https://ekam.olakrutrim.com/cookbook">Cookbook</a> ·
+  <a href="https://ekam.olakrutrim.com/llms.txt">llms.txt</a> ·
   <a href="https://ekam.olakrutrim.com/privacy">Privacy</a> ·
   <a href="https://ekam.olakrutrim.com/terms">Terms</a>
 </p>
@@ -23,28 +25,71 @@ agent era. It gives every principal — a **human** who signs in, or an **agent*
 unattended — a single, verifiable identity, and it brokers **short-lived, audience-bound,
 delegated tokens** that downstream services (gateways, MCP servers, APIs) verify **offline**.
 
+AI agents today authenticate with long-lived API keys — unscoped, unattributable, and impossible to
+revoke cleanly. As agents come to outnumber human users, that doesn't scale and it isn't safe. Ekam
+replaces the shared key with a real identity: **least-privilege, attributable, instantly containable,
+and accountable under Indian law (DPDP)**. It's the trust layer for building **reliable AI and agents**
+— and it's India's own, standards-based and under our own jurisdiction.
+
 Ekam is **gateway-neutral**: it issues the identity and token, and any AI gateway, MCP server, or API
-verifies it **offline** — not tied to any one gateway.
+verifies it offline — not tied to any one gateway.
+
+> 📰 Read the thesis: **[Why India needs its own agent-identity control plane](https://ekam.olakrutrim.com/blog/why-india-needs-an-agent-identity-control-plane)**
+
+## Open beta
+
+Ekam is **open beta — free, no invite**:
+
+- **Humans** sign in with any Google account (or your org's OIDC / SAML / GitHub IdP).
+- **Agents** can **register themselves** in a single API call (no key required) and broker scoped
+  tokens immediately.
+- Usage is metered; **billing is off** during beta.
+- Requests are **throttled (slowed), never blocked** — the service stays up for everyone.
 
 ## Key features
 
-- **Human + agent parity** — every capability ships as a human UI *and* a JSON/MCP API.
+- **Agent self-signup** — an agent registers itself and walks away with a working, scoped credential.
+- **First-class agent identity** — owned, blueprinted, revocable. Not an API key.
 - **Offline verification** — ES256 JWTs + JWKS; gateways verify without calling home, with an
-  optional live **kill-switch** via introspection (RFC 7662).
+  optional live **kill-switch** via introspection (RFC 7662) + **CAEP push** (SSF).
 - **Delegation that travels** — RFC 8693 token-exchange + **ID-JAG / Cross-App Access**: carry a
   verified identity from app A to app B, tenant &amp; entity preserved.
 - **MCP on-ramp** — RFC 9728 Protected Resource Metadata so agents *discover* how to get a token.
-- **Standards-native** — RFC 8414 / 9728 discovery, 8707 audience binding, 7662 introspection.
-- **Multi-tenant** — `tenant` (customer) → `entity` (legal entity) → `owner` (billable) →
-  `blueprint` → `agent`, with scopes, classification ceilings, and cost centers on every token.
-- **Built for India** — hosted on Krutrim Cloud, DPDP-aligned, DR enabled.
+- **Standards-native** — OAuth 2.1, OIDC, RFC 8414 / 9728 discovery, 8707 audience binding, 7662
+  introspection, SCIM 2.0, CAEP/SSF. Bring your own IdP (OIDC/SAML/GitHub) and PDP (groot/OPA/OpenFGA/Cerbos).
+- **Human + agent parity** — every capability ships as a human UI *and* a JSON/MCP API.
+- **DPDP-native** — one canonical **Person** above every account and agent, so access &amp; erasure
+  act on the whole person, not a fragment.
+- **Built for India** — hosted on Krutrim Cloud, DR enabled, priced in INR.
 
 ## Two ways in
 
 | Principal | How it authenticates |
 |-----------|----------------------|
-| **Human** | Sign in with Google (Ola domains: `olacabs.com`, `olaelectric.com`, `olakrutrim.com`). Other domains → **Request access**. |
-| **Agent** | Owner key → `POST /oauth/token` → a scoped, audience-bound token. Or discover the AS via MCP (RFC 9728). |
+| **Human** | Sign in with any Google account at [ekam.olakrutrim.com](https://ekam.olakrutrim.com) (or your org's OIDC / SAML / GitHub IdP). |
+| **Agent** | **Self-signup:** `POST /v1/agents/self-signup` → `owner_key` + `agent_id`, then `POST /oauth/token` for a scoped, audience-bound token. Or discover the AS via MCP (RFC 9728). |
+
+## Quickstart — an agent that signs itself up
+
+```bash
+BASE=https://ekam.olakrutrim.com
+
+# 1. Register an agent (no key needed) — returns an owner_key + agent_id
+curl -s $BASE/v1/agents/self-signup -H 'content-type: application/json' -d '{
+    "name": "my-agent",
+    "allowedAudiences": ["https://your-gateway.example"],
+    "scopes": ["models:invoke", "models:read"]
+  }'
+
+# 2. Broker a short-lived, scoped token (owner_key is the OAuth client)
+curl -s $BASE/oauth/token -H "authorization: Bearer $OWNER_KEY" \
+  -H 'content-type: application/json' \
+  -d '{"grant_type":"urn:ietf:params:oauth:grant-type:token-exchange","agent_id":"agt_…","resource":"https://your-gateway.example","scope":"models:invoke"}'
+```
+
+**Building an agent or tool?** Point it at [`/llms.txt`](https://ekam.olakrutrim.com/llms.txt) and
+[`/llms-full.txt`](https://ekam.olakrutrim.com/llms-full.txt) — a machine-readable map and a full
+self-serve quickstart.
 
 ## Sample code
 
@@ -53,11 +98,12 @@ This repo holds runnable samples — see [`examples/`](examples/). The same reci
 
 | Recipe | File |
 |--------|------|
+| Agent self-signup → broker a token | [`examples/self-signup.sh`](examples/self-signup.sh) |
 | Verify an Ekam token in your gateway (SDK) | [`examples/verify-gateway.ts`](examples/verify-gateway.ts) |
-| Provision an agent &amp; broker a token | [`examples/provision-and-broker.sh`](examples/provision-and-broker.sh) |
+| Provision an agent &amp; broker a token (owner key) | [`examples/provision-and-broker.sh`](examples/provision-and-broker.sh) |
 | Govern an MCP server with Ekam (RFC 9728) | [`examples/govern-mcp.md`](examples/govern-mcp.md) |
 | Cross-app delegation with ID-JAG | [`examples/idjag.sh`](examples/idjag.sh) |
-| Add Ola Google SSO to your app | [`examples/sso.html`](examples/sso.html) |
+| Add Google SSO to your app | [`examples/sso.html`](examples/sso.html) |
 | Kill-switch: revoke a compromised agent | [`examples/revoke.sh`](examples/revoke.sh) |
 
 ## Verify a token in one import
@@ -76,7 +122,7 @@ const principal = await verify(token); // { agentId, ownerId, scopes, tenant, en
 
 ## Status
 
-Live at **https://ekam.olakrutrim.com** · invite-only (v1) · DR enabled. The control-plane source is
+Live at **https://ekam.olakrutrim.com** · **open beta** · DR enabled. The control-plane source is
 maintained privately by the Krutrim team; this repo is the public front door — samples, docs links,
 and issue tracking.
 
